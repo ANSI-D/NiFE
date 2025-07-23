@@ -94,6 +94,17 @@ proc drawStatusBar*(fm: FileManager) =
   else:
     statusText = fmt"Files: {fm.currentPanel.files.len}"
   
+  # Show operation mode
+  case fm.operationMode:
+  of omCopy:
+    statusText &= " | COPY MODE"
+  of omMove:
+    statusText &= " | MOVE MODE"
+  of omDelete:
+    statusText &= " | DELETE MODE"
+  else:
+    discard
+  
   if fm.statusMessage.len > 0:
     statusText &= " | " & fm.statusMessage
   

@@ -6,6 +6,7 @@ import os
 import strutils
 import strformat
 import algorithm
+import terminal
 import ./types
 
 proc getFileType*(path: string): FileType =
@@ -95,15 +96,16 @@ proc openFile*(filePath: string) =
   else:
     echo "File opening not supported on this platform"
 
+## Navigate to the parent directory
 proc goToParent*(panel: var Panel) =
-  ## Navigate to the parent directory
   let parentPath = parentDir(panel.path)
   if parentPath != panel.path and dirExists(parentPath):
     panel.path = parentPath
     updatePanel(panel)
-
+    
+    
+## Enter the selected directory
 proc enterDirectory*(panel: var Panel) =
-  ## Enter the selected directory
   if panel.selectedIndex < panel.files.len:
     let selectedFile = panel.files[panel.selectedIndex]
     if selectedFile.fileType == ftDirectory:
@@ -112,15 +114,15 @@ proc enterDirectory*(panel: var Panel) =
       panel.startIndex = 0
       updatePanel(panel)
 
+## Move selection up in the file list
 proc moveUp*(panel: var Panel) =
-  ## Move selection up in the file list
   if panel.selectedIndex > 0:
     panel.selectedIndex.dec
     if panel.selectedIndex < panel.startIndex:
       panel.startIndex = panel.selectedIndex
 
+## Move selection down in the file list
 proc moveDown*(panel: var Panel) =
-  ## Move selection down in the file list
   if panel.selectedIndex < panel.files.len - 1:
     panel.selectedIndex.inc
     let visibleHeight = panel.height - 4
@@ -141,3 +143,60 @@ proc moveToBottom*(panel: var Panel) =
       panel.startIndex = panel.files.len - visibleHeight
     else:
       panel.startIndex = 0
+
+## File Operations
+
+proc deleteFileOrDir*(filePath: string): bool =
+  ## Delete a file or directory
+  ## Returns true on success, false on failure
+  try:
+    if dirExists(filePath):
+      removeDir(filePath)
+    else:
+      removeFile(filePath)
+    return true
+  except:
+    return false
+
+proc copyFileOrDir*(srcPath, destPath: string): bool =
+  ## Copy a file or directory from source to destination
+  ## Returns true on success, false on failure
+  try:
+    if dirExists(srcPath):
+      # For directories, we need to copy recursively
+      copyDir(srcPath, destPath)
+    else:
+      # For files, simple copy
+      copyFile(srcPath, destPath)
+    return true
+  except:
+    return false
+
+proc moveFileOrDir*(srcPath, destPath: string): bool =
+  ## Move/rename a file or directory from source to destination
+  ## Returns true on success, false on failure
+  try:
+    moveFile(srcPath, destPath)
+    return true
+  except:
+    # If move fails, try copy then delete
+    if copyFileOrDir(srcPath, destPath):
+      return deleteFileOrDir(srcPath)
+    return false
+
+proc getUserInput*(prompt: string): string =
+  ## Get user input with a prompt
+  eraseScreen()
+  setCursorPos(0, 0)
+  stdout.write(prompt & ": ")
+  stdout.flushFile()
+  return readLine(stdin)
+
+## Ask user for confirmation (y/n)
+proc confirmAction*(message: string): bool =
+  eraseScreen()
+  setCursorPos(0, 0)
+  stdout.write(message & " (y/n): ")
+  stdout.flushFile()
+  let response = getch()
+  return response == 'y' or response == 'Y'

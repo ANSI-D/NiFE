@@ -6,6 +6,9 @@ type
   FileType* = enum
     ftDirectory, ftFile, ftSymlink, ftExecutable
   
+  OperationMode* = enum
+    omNormal, omCopy, omMove, omDelete
+  
   FileItem* = object
     name*: string
     path*: string
@@ -29,6 +32,8 @@ type
     terminalWidth*: int
     terminalHeight*: int
     statusMessage*: string
+    operationMode*: OperationMode
+    sourceFile*: string  # For copy/move operations
 
 const
   VERSION* = "0.1.0"
@@ -48,4 +53,11 @@ Keybindings:
   ?               - Show this help
   Enter           - Open file with default application
   Space           - Preview file content
+
+File Operations:
+  c               - Copy file/directory
+  x               - Cut (move) file/directory
+  v               - Paste file/directory
+  d               - Delete file/directory
+  Escape          - Cancel operation
 """

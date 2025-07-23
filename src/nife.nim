@@ -22,7 +22,9 @@ proc initFileManager*(): FileManager =
     rightPanel: initPanel(currentDir, panelWidth, panelHeight),
     terminalWidth: termWidth,
     terminalHeight: termHeight,
-    statusMessage: ""
+    statusMessage: "",
+    operationMode: omNormal,
+    sourceFile: ""
   )
   
   result.currentPanel = result.leftPanel.addr
@@ -46,24 +48,31 @@ proc processInput*(fm: var FileManager): bool =
         enterDirectory(fm.currentPanel[])
       else:
         openFile(file.path)
-  of '\x1b': # Escape sequence (arrow keys)
-    if getch() == '[':
-      case getch():
-      of 'A': # Up arrow
-        moveUp(fm.currentPanel[])
-      of 'B': # Down arrow
-        moveDown(fm.currentPanel[])
-      of 'C': # Right arrow
-        if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
-          let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
-          if file.fileType == ftDirectory:
-            enterDirectory(fm.currentPanel[])
-          else:
-            openFile(file.path)
-      of 'D': # Left arrow
-        goToParent(fm.currentPanel[])
-      else:
-        discard
+  of '\x1b': # Escape sequence (arrow keys) or cancel operation
+    # First check if we're in an operation mode
+    if fm.operationMode != omNormal:
+      fm.operationMode = omNormal
+      fm.sourceFile = ""
+      fm.statusMessage = "Operation cancelled"
+    else:
+      # Handle arrow keys
+      if getch() == '[':
+        case getch():
+        of 'A': # Up arrow
+          moveUp(fm.currentPanel[])
+        of 'B': # Down arrow
+          moveDown(fm.currentPanel[])
+        of 'C': # Right arrow
+          if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+            let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+            if file.fileType == ftDirectory:
+              enterDirectory(fm.currentPanel[])
+            else:
+              openFile(file.path)
+        of 'D': # Left arrow
+          goToParent(fm.currentPanel[])
+        else:
+          discard
   of 'j':
     moveDown(fm.currentPanel[])
   of 'k':
@@ -87,6 +96,57 @@ proc processInput*(fm: var FileManager): bool =
       let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
       if file.fileType == ftFile:
         showPreview(file.path, fm.terminalWidth, fm.terminalHeight)
+  of 'c': # Copy file
+    if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+      let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+      fm.operationMode = omCopy
+      fm.sourceFile = file.path
+      fm.statusMessage = "Copy mode: " & file.name & " (press 'v' to paste, ESC to cancel)"
+  of 'x': # Cut/move file
+    if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+      let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+      fm.operationMode = omMove
+      fm.sourceFile = file.path
+      fm.statusMessage = "Move mode: " & file.name & " (press 'v' to paste, ESC to cancel)"
+  of 'v': # Paste file
+    if fm.operationMode in [omCopy, omMove] and fm.sourceFile.len > 0:
+      let fileName = extractFilename(fm.sourceFile)
+      let destPath = fm.currentPanel.path / fileName
+      
+      if fileExists(destPath) or dirExists(destPath):
+        if confirmAction("Destination exists. Overwrite?"):
+          discard deleteFileOrDir(destPath)
+        else:
+          fm.operationMode = omNormal
+          fm.sourceFile = ""
+          fm.statusMessage = "Operation cancelled"
+          return true
+      
+      var success = false
+      if fm.operationMode == omCopy:
+        success = copyFileOrDir(fm.sourceFile, destPath)
+        if success:
+          fm.statusMessage = "Copied: " & fileName
+      else: # omMove
+        success = moveFileOrDir(fm.sourceFile, destPath)
+        if success:
+          fm.statusMessage = "Moved: " & fileName
+      
+      if not success:
+        fm.statusMessage = "Operation failed!"
+      
+      fm.operationMode = omNormal
+      fm.sourceFile = ""
+      updatePanel(fm.currentPanel[])
+  of 'd': # Delete file
+    if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+      let file = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+      if confirmAction("Delete " & file.name & "?"):
+        if deleteFileOrDir(file.path):
+          fm.statusMessage = "Deleted: " & file.name
+          updatePanel(fm.currentPanel[])
+        else:
+          fm.statusMessage = "Delete failed!"
   else:
     discard
   
