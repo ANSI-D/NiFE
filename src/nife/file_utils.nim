@@ -6,7 +6,7 @@ import os
 import strutils
 import strformat
 import algorithm
-import types
+import ./types
 
 proc getFileType*(path: string): FileType =
   ## Determine the type of a file or directory

@@ -5,9 +5,9 @@
 
 import os
 import terminal
-import types
-import file_utils
-import ui
+import nife/types
+import nife/file_utils
+import nife/ui
 
 ## Initialize the file manager (with default settings, might create a config file later)
 proc initFileManager*(): FileManager =

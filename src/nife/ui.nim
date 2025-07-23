@@ -6,8 +6,8 @@ import os
 import strutils
 import strformat
 import terminal
-import types
-import file_utils
+import ./types
+import ./file_utils
 
 ## Draw a file panel at the specified position
 
