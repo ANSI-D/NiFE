@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.1"
+version       = "0.1.2"
 author        = "ANSI-D"
 description   = "Minimal terminal file manager inspired by Ranger FM"
 license       = "GPL-3.0"
@@ -14,8 +14,8 @@ installExt    = @["nim"]
 requires "nim >= 1.6.0"
 
 # Make nimble install put binary in system-wide location
-before install:
-  exec "sudo install -D -m 755 bin/nife /usr/local/bin/nife"
+after install:
+  exec "sudo cp ~/.nimble/bin/nife /usr/local/bin/"
   echo "NiFE installed to /usr/local/bin/nife (system-wide)"
 
 before uninstall:
