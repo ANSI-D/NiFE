@@ -78,12 +78,6 @@ Or if you built locally without installing:
 | `?` | Show help |
 | `q` | Quit |
 
-## File Type Colors
-
-- **Blue** - Directories
-- **Green** - Executable files
-- **Magenta** - Symbolic links
-- **White** - Regular files
 
 ## Window Example
 
@@ -101,14 +95,13 @@ File: projects | Files: 4 | Press ? for help
 
 ## Architecture
 
-The file manager consists of several key components:
+The file manager consists of several components:
 
 - **FileItem**: Represents individual files and directories with metadata
 - **Panel**: Manages file listings and navigation state for each pane
 - **FileManager**: Main application state and UI coordination
 - **Drawing System**: Terminal-based UI rendering with borders and colors
 - **Input Handler**: Keyboard input processing and command execution
-
 
 
 ## Roadmap
@@ -124,19 +117,11 @@ The file manager consists of several key components:
 - `terminal` (built-in) - For terminal control and input handling
 - Standard library modules: `os`, `strutils`, `strformat`, `tables`, `sequtils`, `algorithm`
 
-## Troubleshooting
 
-### Terminal Issues
-
-If you experience display issues, ensure your terminal supports:
-- ANSI color codes
-- Cursor positioning
-- UTF-8 box drawing characters
-
-### File Access
+## File Access
 
 The file manager respects system permissions. If you cannot access certain directories, check your user permissions.
 
-### Performance
+## Performance
 
 For directories with thousands of files, initial loading may take a moment. Use `R` to refresh if needed.
