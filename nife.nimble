@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.2"
+version       = "0.1.5"
 author        = "ANSI-D"
 description   = "Minimal terminal file manager inspired by Ranger FM"
 license       = "GPL-3.0"
