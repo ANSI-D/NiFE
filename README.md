@@ -21,7 +21,7 @@ A simple terminal file manager for Linux and MacOS inspired by Ranger FM, writte
 ### Method 1: System-wide Installation (Recommended)
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ANSI-D/NiFE.git
 cd NiFE
 nimble installGlobal
 ```
@@ -31,7 +31,7 @@ This will install `nife` to `/usr/local/bin/` and make it available system-wide.
 ### Method 2: User Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ANSI-D/NiFE.git
 cd NiFE
 nimble install
 ```
@@ -41,7 +41,7 @@ This installs to `~/.nimble/bin/`. You'll need to add `~/.nimble/bin` to your PA
 ### Method 3: Build Only
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ANSI-D/NiFE.git
 cd NiFE
 nimble build
 ./nife  # Run from current directory
