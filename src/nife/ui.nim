@@ -21,7 +21,9 @@ proc drawPanel*(panel: Panel, x, y: int, isActive: bool) =
   
   # Draw path header
   setCursorPos(x, y + 1)
-  let pathDisplay = if panel.path.len > panel.width - 4:
+  let pathDisplay = if panel.isSearchMode:
+    "Search: " & panel.searchQuery
+  elif panel.path.len > panel.width - 4:
     "..." & panel.path[^(panel.width - 7)..^0]
   else:
     panel.path
@@ -102,6 +104,8 @@ proc drawStatusBar*(fm: FileManager) =
     statusText &= " | MOVE MODE"
   of omDelete:
     statusText &= " | DELETE MODE"
+  of omSearch:
+    statusText &= " | SEARCH MODE - Type to search, ESC to exit"
   else:
     discard
   

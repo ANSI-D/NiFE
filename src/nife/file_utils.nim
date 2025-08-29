@@ -83,7 +83,9 @@ proc initPanel*(path: string, width, height: int): Panel =
     selectedIndex: 0,
     startIndex: 0,
     width: width,
-    height: height
+    height: height,
+    searchQuery: "",
+    isSearchMode: false
   )
   updatePanel(result)
 
@@ -96,11 +98,51 @@ proc openFile*(filePath: string) =
   else:
     echo "File opening not supported on this platform"
 
+proc filterFiles*(files: seq[FileItem], query: string): seq[FileItem] =
+  ## Filter files based on search query (case-insensitive)
+  result = @[]
+  if query.len == 0:
+    return files
+  
+  let lowerQuery = query.toLowerAscii()
+  for file in files:
+    if lowerQuery in file.name.toLowerAscii():
+      result.add(file)
+
+proc enterSearchMode*(panel: var Panel) =
+  ## Enter search mode for the panel
+  panel.isSearchMode = true
+  panel.allFiles = panel.files  # Backup current files
+  panel.searchQuery = ""
+  panel.selectedIndex = 0
+  panel.startIndex = 0
+
+proc exitSearchMode*(panel: var Panel) =
+  ## Exit search mode and restore all files
+  panel.isSearchMode = false
+  panel.files = panel.allFiles
+  panel.searchQuery = ""
+  panel.selectedIndex = 0
+  panel.startIndex = 0
+
+proc updateSearchResults*(panel: var Panel, query: string) =
+  ## Update search results based on query
+  panel.searchQuery = query
+  if query.len == 0:
+    panel.files = panel.allFiles
+  else:
+    panel.files = filterFiles(panel.allFiles, query)
+  
+  panel.selectedIndex = 0
+  panel.startIndex = 0
+
 ## Navigate to the parent directory
 proc goToParent*(panel: var Panel) =
   let parentPath = parentDir(panel.path)
   if parentPath != panel.path and dirExists(parentPath):
     panel.path = parentPath
+    if panel.isSearchMode:
+      exitSearchMode(panel)
     updatePanel(panel)
     
     

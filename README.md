@@ -107,9 +107,8 @@ The file manager consists of several components:
 ## Roadmap
 
 - [ ] File operations (copy, move, delete)
-- [ ] Search functionality
+- [x] Search functionality
 - [ ] Better file preview (images, binary files)
-- [ ] Multiple tabs
 - [ ] File permissions editing
 
 ## Dependencies

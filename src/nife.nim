@@ -24,7 +24,8 @@ proc initFileManager*(): FileManager =
     terminalHeight: termHeight,
     statusMessage: "",
     operationMode: omNormal,
-    sourceFile: ""
+    sourceFile: "",
+    searchQuery: ""
   )
   
   result.currentPanel = result.leftPanel.addr
@@ -36,6 +37,75 @@ proc processInput*(fm: var FileManager): bool =
   # Clear any previous status message
   fm.statusMessage = ""
   
+  # Handle search input first (if in search mode)
+  if fm.operationMode == omSearch:
+    case ch:
+    of '\x1b': # Escape - could be exit or arrow keys
+      # For simplicity, just exit search mode on escape
+      exitSearchMode(fm.currentPanel[])
+      fm.operationMode = omNormal
+      fm.searchQuery = ""
+      fm.statusMessage = "Search cancelled"
+      return true
+    of '\b', '\x7f': # Backspace
+      if fm.searchQuery.len > 0:
+        fm.searchQuery = fm.searchQuery[0..^2]
+        updateSearchResults(fm.currentPanel[], fm.searchQuery)
+      return true
+    of '\r', '\n': # Enter - open selected file/directory
+      if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+        let selectedFile = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+        if selectedFile.fileType == ftDirectory:
+          # Store the selected file path before exiting search mode
+          let targetPath = selectedFile.path
+          exitSearchMode(fm.currentPanel[])
+          fm.operationMode = omNormal
+          fm.searchQuery = ""
+          # Manually navigate to the selected directory
+          fm.currentPanel.path = targetPath
+          fm.currentPanel.selectedIndex = 0
+          fm.currentPanel.startIndex = 0
+          updatePanel(fm.currentPanel[])
+        else:
+          openFile(selectedFile.path)
+      return true
+    of 'j':
+      moveDown(fm.currentPanel[])
+      return true
+    of 'k':
+      moveUp(fm.currentPanel[])
+      return true
+    of 'l': # Right arrow alternative - open file/directory
+      if fm.currentPanel.selectedIndex < fm.currentPanel.files.len:
+        let selectedFile = fm.currentPanel.files[fm.currentPanel.selectedIndex]
+        if selectedFile.fileType == ftDirectory:
+          # Store the selected file path before exiting search mode
+          let targetPath = selectedFile.path
+          exitSearchMode(fm.currentPanel[])
+          fm.operationMode = omNormal
+          fm.searchQuery = ""
+          # Manually navigate to the selected directory
+          fm.currentPanel.path = targetPath
+          fm.currentPanel.selectedIndex = 0
+          fm.currentPanel.startIndex = 0
+          updatePanel(fm.currentPanel[])
+        else:
+          openFile(selectedFile.path)
+      return true
+    of 'h': # Left arrow alternative - go to parent
+      exitSearchMode(fm.currentPanel[])
+      fm.operationMode = omNormal
+      fm.searchQuery = ""
+      goToParent(fm.currentPanel[])
+      return true
+    else:
+      # Add character to search query if it's printable
+      if ch >= ' ' and ch <= '~':
+        fm.searchQuery.add(ch)
+        updateSearchResults(fm.currentPanel[], fm.searchQuery)
+      return true
+  
+  # Normal mode input handling
   case ch:
   of 'q':
     return false
@@ -147,6 +217,12 @@ proc processInput*(fm: var FileManager): bool =
           updatePanel(fm.currentPanel[])
         else:
           fm.statusMessage = "Delete failed!"
+  of '/': # Search
+    if fm.operationMode == omNormal:
+      fm.operationMode = omSearch
+      enterSearchMode(fm.currentPanel[])
+      fm.searchQuery = ""
+      fm.statusMessage = "Search mode: Type to search, ESC to exit"
   else:
     discard
   

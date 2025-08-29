@@ -7,7 +7,7 @@ type
     ftDirectory, ftFile, ftSymlink, ftExecutable
   
   OperationMode* = enum
-    omNormal, omCopy, omMove, omDelete
+    omNormal, omCopy, omMove, omDelete, omSearch
   
   FileItem* = object
     name*: string
@@ -20,10 +20,13 @@ type
   Panel* = object
     path*: string
     files*: seq[FileItem]
+    allFiles*: seq[FileItem]  # Backup of all files for search
     selectedIndex*: int
     startIndex*: int
     width*: int
     height*: int
+    searchQuery*: string
+    isSearchMode*: bool
 
   FileManager* = object
     leftPanel*: Panel
@@ -34,6 +37,7 @@ type
     statusMessage*: string
     operationMode*: OperationMode
     sourceFile*: string  # For copy/move operations
+    searchQuery*: string  # Current search query
 
 const
   VERSION* = "0.1.0"
@@ -59,5 +63,6 @@ File Operations:
   x               - Cut (move) file/directory
   v               - Paste file/directory
   d               - Delete file/directory
-  Escape          - Cancel operation
+  /               - Search files
+  Escape          - Cancel operation / Exit search
 """
