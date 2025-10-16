@@ -43,16 +43,25 @@ proc getFileItems*(path: string): seq[FileItem] =
       let fileName = extractFilename(filePath)
       if fileName == "." or fileName == "..":
         continue
-        
+      
+      # Small optimization: walkDir's kind parameter instead of calling getFileType
+      let fileType = case kind
+        of pcFile, pcLinkToFile: 
+          if fpUserExec in getFilePermissions(filePath):
+            ftExecutable
+          else:
+            ftFile
+        of pcDir, pcLinkToDir: ftDirectory
+      
       var item = FileItem(
         name: fileName,
         path: filePath,
-        fileType: getFileType(filePath),
+        fileType: fileType,
         isHidden: fileName.startsWith(".")
       )
       
       try:
-        let info = getFileInfo(filePath)
+        let info = getFileInfo(filePath, followSymlink = false)
         item.size = info.size
       except:
         item.size = 0
